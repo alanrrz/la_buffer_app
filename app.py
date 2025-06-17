@@ -4,10 +4,14 @@ import geopandas as gpd
 import pandas as pd
 
 # ─── DATA DOWNLOAD ─────────────────────────────────────────────────────
+import os, requests
+import streamlit as st
+
 DATA_SOURCES = {
-    "Schools.gpkg":        "https://my-bucket.s3.amazonaws.com/Schools.gpkg",
-    "AddressPoints.gpkg":  "https://my-bucket.s3.amazonaws.com/AddressPoints.gpkg"
+    "Schools.gpkg":       "https://drive.google.com/uc?export=download&id=1XcGZvFmHdv4zmJBNb9MYHeIIjuPwMjGv",
+    "AddressPoints.gpkg": "https://drive.google.com/uc?export=download&id=1_3_FEgj4V7uHigDN13KDueDhULGP6yWc"
 }
+
 for fname, url in DATA_SOURCES.items():
     if not os.path.exists(fname):
         with st.spinner(f"Downloading {fname}…"):
