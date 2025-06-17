@@ -1,24 +1,40 @@
-import os, requests
-import streamlit as st
-import geopandas as gpd
-import pandas as pd
-
-# ─── DATA DOWNLOAD ─────────────────────────────────────────────────────
-import os, requests
+import os
+import requests
 import streamlit as st
 
+# ─── GOOGLE DRIVE FILE DOWNLOAD ─────────────────────────────────────────
+def download_file_from_google_drive(file_id, destination):
+    URL = "https://docs.google.com/uc?export=download"
+    session = requests.Session()
+
+    # 1. Initial request
+    response = session.get(URL, params={'id': file_id}, stream=True)
+    token = None
+    for key, value in response.cookies.items():
+        if key.startswith('download_warning'):
+            token = value
+
+    # 2. Confirm token if present
+    if token:
+        response = session.get(URL, params={'id': file_id, 'confirm': token}, stream=True)
+
+    # 3. Save to disk in chunks
+    CHUNK_SIZE = 32768
+    with open(destination, "wb") as f:
+        for chunk in response.iter_content(CHUNK_SIZE):
+            if chunk:
+                f.write(chunk)
+
+# Map file names to their Drive IDs
 DATA_SOURCES = {
-    "Schools.gpkg":       "https://drive.google.com/uc?export=download&id=1XcGZvFmHdv4zmJBNb9MYHeIIjuPwMjGv",
-    "AddressPoints.gpkg": "https://drive.google.com/uc?export=download&id=1_3_FEgj4V7uHigDN13KDueDhULGP6yWc"
+    "Schools.gpkg":       "1XcGZvFmHdv4zmJBNb9MYHeIIjuPwMjGv",
+    "AddressPoints.gpkg": "1_3_FEgj4V7uHigDN13KDueDhULGP6yWc"
 }
 
-for fname, url in DATA_SOURCES.items():
+for fname, file_id in DATA_SOURCES.items():
     if not os.path.exists(fname):
         with st.spinner(f"Downloading {fname}…"):
-            r = requests.get(url)
-            r.raise_for_status()
-            with open(fname, "wb") as f:
-                f.write(r.content)
+            download_file_from_google_drive(file_id, fname)
 
 # ─── CONFIG ─────────────────────────────────────────────────────────────
 SCHOOLS_GPKG    = "Schools.gpkg"
